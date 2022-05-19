@@ -1,0 +1,2 @@
+totpSecret = ""
+totpInterval = 600
