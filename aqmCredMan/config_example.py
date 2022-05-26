@@ -1,3 +1,9 @@
+#database stuff
+db_host = ''
+db_user = ''
+db_pass = ''
+
+#totp stuff
 totpSecret = ""
 totpInterval = 600
 
@@ -19,5 +25,6 @@ mqtt_username = "mqtt username"
 mqtt_password = "mqtt password"
 
 #webinterface credentials
+#will be generated on the fly, unless you rewrite it yourself
 web_username = "web username"
 web_password = "web password"
