@@ -16,9 +16,10 @@ web = generate_user_pass_combo()
 
 def send_to_sql_server():
     try:
-        #create credentials table
+        #create table for credentials
         conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + db_host + ';DATABASE=' + db_user + ';UID=' + db_user + ';PWD=' + db_pass)
         cursor = conn.cursor()
+        cursor.execute(open("aqmCredMan/sql/create_table.sql", "r").read())
         cursor.execute("INSERT INTO credentials (enterprise_user, enterprise_pass, enterprise_ssid, private_ssid, private_password, sense_net_name, mqtt_server, mqtt_username, mqtt_password, web_username, web_password) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                        enterprise_user, enterprise_pass, enterprise_ssid, private_ssid, private_password, sense_net_name, mqtt_server, mqtt_username, mqtt_password, web[0], web[1])
         conn.commit()
