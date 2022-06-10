@@ -1,5 +1,5 @@
 import json
-import pyodbc
+import sqlite3
 import random
 import string
 import logging
@@ -14,23 +14,36 @@ def generate_user_pass_combo():
 
 web = generate_user_pass_combo()
 
-def send_to_sql_server():
+def sql_create_table():
+    #create table for credentials
     try:
-        #create table for credentials
-        conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=' + db_host + ';DATABASE=' + db_user + ';UID=' + db_user + ';PWD=' + db_pass)
+        conn = sqlite3.connect("aqmCredMan/credentials.sqlite")
         cursor = conn.cursor()
-        cursor.execute(open("aqmCredMan/sql/create_table.sql", "r").read())
-        cursor.execute("INSERT INTO credentials (enterprise_user, enterprise_pass, enterprise_ssid, private_ssid, private_password, sense_net_name, mqtt_server, mqtt_username, mqtt_password, web_username, web_password) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                       enterprise_user, enterprise_pass, enterprise_ssid, private_ssid, private_password, sense_net_name, mqtt_server, mqtt_username, mqtt_password, web[0], web[1])
-        conn.commit()
-        cursor.close()
+        conn.execute(open("aqmCredMan/sql/create_table.sql", "r").read())
         conn.close()
-        return True
     except Exception as e:
         logging.info(e)
         return False
 
+def get_new_id():
+    conn = sqlite3.connect("aqmCredMan/credentials.sqlite")
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM credentials ORDER BY id DESC LIMIT 0, 1")
+    output = cursor.fetchall()
+    conn.close()
+    if output == []:
+        return 1
+    return int(output[0][0]) + 1
+
+def sql_insert_credentials(id,username,password):
+    conn = sqlite3.connect("aqmCredMan/credentials.sqlite")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO credentials VALUES (?,?,?)",(id,username,password))
+    conn.commit()
+    conn.close()
 def create_response():
+    sql_create_table()
+    id = get_new_id()
     web = generate_user_pass_combo()
     response = {
         "enterprise_user": enterprise_user,
@@ -42,9 +55,10 @@ def create_response():
         "mqtt_server": mqtt_server,
         "mqtt_username": mqtt_username,
         "mqtt_password": mqtt_password,
+        "id":id,
         "web_username": web[0],
         "web_password": web[1]
     }
-    send_to_sql_server()
+    sql_insert_credentials(id,web[0],web[1])
     logging.info(response)
     return json.dumps(response)
